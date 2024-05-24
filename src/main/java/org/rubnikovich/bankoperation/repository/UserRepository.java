@@ -4,6 +4,8 @@ import org.rubnikovich.bankoperation.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -19,6 +21,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Page<User> findAllByBirthDateAfter(LocalDate birthDate, Pageable pageable);
 
-    Page<User> findByLastName(String lastName, Pageable pageable);
+//    Page<User> findByLastName(String lastName, Pageable pageable);  //100%
+
+    @Query("SELECT u FROM User u WHERE u.lastName LIKE %:lastName%")
+    Page<User> findByLastNameLike(@Param("lastName") String lastName, Pageable pageable); //like
 
 }

@@ -115,7 +115,7 @@ public class UserService {
             List<User> users = emailPage.stream().map(UserEmail::getUser).collect(Collectors.toList());
             usersPage = new PageImpl<>(users, pageable, emailPage.getTotalElements());
         } else if (lastName != null) {
-            usersPage = repository.findByLastName(lastName, pageable);
+            usersPage = repository.findByLastNameLike(lastName, pageable);
         } else {
             usersPage = repository.findAll(pageable);
         }
