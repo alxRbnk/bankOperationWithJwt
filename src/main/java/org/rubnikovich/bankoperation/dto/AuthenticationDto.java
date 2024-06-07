@@ -13,5 +13,7 @@ public class AuthenticationDto {
     @Size(min = 2, max = 100, message = "from 2 to 100 symbols")
     private String login;
 
+    @NotEmpty(message = "password cannot be empty")
+    @Size(min = 4, max = 100, message = "password must be between 4 and 100 characters")
     private String password;
 }

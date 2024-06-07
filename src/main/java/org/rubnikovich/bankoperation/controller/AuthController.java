@@ -3,6 +3,7 @@ package org.rubnikovich.bankoperation.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -12,6 +13,7 @@ import org.rubnikovich.bankoperation.entity.User;
 import org.rubnikovich.bankoperation.security.JwtUtil;
 import org.rubnikovich.bankoperation.service.UserService;
 import org.rubnikovich.bankoperation.validator.CustomValidator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -94,7 +96,6 @@ public class AuthController {
     public User convertToUser(UserDto userDto) {
         return this.modelMapper.map(userDto, User.class);
     }
-
 }
 
 

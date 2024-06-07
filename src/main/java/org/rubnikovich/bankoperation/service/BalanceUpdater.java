@@ -1,8 +1,5 @@
 package org.rubnikovich.bankoperation.service;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.rubnikovich.bankoperation.entity.User;
 import org.rubnikovich.bankoperation.repository.UserRepository;
@@ -26,11 +23,6 @@ public class BalanceUpdater {
 
     @Scheduled(fixedRate = 60000)
     @Transactional
-    @Operation(summary = "Increase user balances periodically")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Balances updated successfully"),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
-    })
     public void increaseBalance() {
         List<User> users = userRepository.findAll();
         for (User user : users) {
