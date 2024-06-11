@@ -14,16 +14,14 @@ public class TransactionDto {
 
     private long id;
 
-    @NotNull(message = "Sender ID cannot be null")
-    private Long sender;
+    private long sender;
 
     @NotNull(message = "Recipient ID cannot be null")
-    private Long recipient;
+    private long recipient;
 
     @NotNull(message = "Amount cannot be null")
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
     private BigDecimal amount;
 
-    @NotNull(message = "Date cannot be null")
     private LocalDateTime date;
 }

@@ -22,5 +22,4 @@ public class UserEmail {
     @NotEmpty(message = "must not be empty")
     @Column(name = "email", nullable = false, unique = true)
     private String email;
-
 }

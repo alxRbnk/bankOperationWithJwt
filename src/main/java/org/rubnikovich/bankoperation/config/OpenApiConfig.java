@@ -1,4 +1,4 @@
-package org.rubnikovich.bankoperation.openapiconfig;
+package org.rubnikovich.bankoperation.config;
 
 import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;

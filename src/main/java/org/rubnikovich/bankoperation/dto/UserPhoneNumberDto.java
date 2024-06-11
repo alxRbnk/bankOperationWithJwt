@@ -20,6 +20,5 @@ public class UserPhoneNumberDto {
     @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Invalid new phone number format")
     private String newPhone;
 
-    @NotNull(message = "User ID cannot be null")
     private Long userId;
 }

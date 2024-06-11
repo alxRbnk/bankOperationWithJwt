@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-@Component
+//@Component //fixme
 @Slf4j
 public class BalanceUpdater {
 

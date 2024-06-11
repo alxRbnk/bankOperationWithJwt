@@ -6,7 +6,7 @@ import org.rubnikovich.bankoperation.entity.UserEmail;
 import org.rubnikovich.bankoperation.entity.UserPhoneNumber;
 import org.rubnikovich.bankoperation.service.EmailService;
 import org.rubnikovich.bankoperation.service.PhoneService;
-import org.rubnikovich.bankoperation.service.UsersDetailsService;
+import org.rubnikovich.bankoperation.service.DetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
@@ -15,12 +15,12 @@ import org.springframework.validation.Validator;
 @Slf4j
 @Component
 public class CustomValidator implements Validator {
-    private final UsersDetailsService usersDetailsService;
+    private final DetailsService detailsService;
     private final PhoneService phoneService;
     private final EmailService emailService;
 
-    public CustomValidator(UsersDetailsService usersDetailsService, PhoneService phoneService, EmailService emailService) {
-        this.usersDetailsService = usersDetailsService;
+    public CustomValidator(DetailsService detailsService, PhoneService phoneService, EmailService emailService) {
+        this.detailsService = detailsService;
         this.phoneService = phoneService;
         this.emailService = emailService;
     }
@@ -34,7 +34,7 @@ public class CustomValidator implements Validator {
     public void validate(Object target, Errors errors) {
         User user = (User) target;
         try {
-            usersDetailsService.loadUserByUsername(user.getLogin());
+            detailsService.loadUserByUsername(user.getLogin());
             errors.rejectValue("login", "", "Login already exists");
             log.warn("Login already exists: {}", user.getLogin());
         } catch (UsernameNotFoundException ignored) {

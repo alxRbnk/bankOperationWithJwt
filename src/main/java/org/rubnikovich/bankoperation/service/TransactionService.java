@@ -8,6 +8,7 @@ import org.rubnikovich.bankoperation.entity.Transaction;
 import org.rubnikovich.bankoperation.entity.User;
 import org.rubnikovich.bankoperation.repository.TransactionRepository;
 import org.rubnikovich.bankoperation.repository.UserRepository;
+import org.rubnikovich.bankoperation.security.JwtUtil;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -23,6 +24,7 @@ public class TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
     public Transaction getById(Long id) {
         return transactionRepository.findById(id).orElseThrow(EntityNotFoundException::new);
@@ -37,7 +39,9 @@ public class TransactionService {
         return transactionsDto;
     }
 
-    public List<TransactionDto> getAllUserTransactions(String login) {
+    public List<TransactionDto> getAllUserTransactions(String token) {
+        token = token.substring(7);
+        String login = jwtUtil.validateTokenAndGetClaim(token);
         User user = userRepository.findByLogin(login).orElseThrow();
         Long id = user.getId();
         List<Transaction> transactions = transactionRepository.getAllByRecipientIdOrSenderId(id, id);
@@ -48,11 +52,14 @@ public class TransactionService {
         return transactionsDto;
     }
 
-    public boolean makeTransaction(TransactionDto transactionDto) {
+    public boolean makeTransaction(TransactionDto transactionDto, String token) {
+        token = token.substring(7);
+        String login = jwtUtil.validateTokenAndGetClaim(token);
+        User sender = userRepository.findByLogin(login)
+                .orElseThrow(() -> new NoSuchElementException("Recipient not found"));
+        transactionDto.setSender(sender.getId());
         User recipient = userRepository.findById(transactionDto.getRecipient())
                 .orElseThrow(() -> new NoSuchElementException("Recipient not found"));
-        User sender = userRepository.findById(transactionDto.getSender())
-                .orElseThrow(() -> new NoSuchElementException("Sender not found"));
         BigDecimal senderMoney = sender.getBalance();
         BigDecimal recipientMoney = recipient.getBalance();
         BigDecimal amount = transactionDto.getAmount();

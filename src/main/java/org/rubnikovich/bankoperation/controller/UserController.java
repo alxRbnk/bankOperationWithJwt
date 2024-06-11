@@ -104,7 +104,6 @@ public class UserController {
         log.info("Fetching users born after: {}", birthDate);
         Page<UserDto> users = userService.getAllByBirthDateAfter(birthDate, pageable);
         return ResponseEntity.ok(users);
-        // http://localhost:8080/users/date?birthDate=1990-01-01
     }
 
     @Operation(summary = "Find users")
@@ -126,7 +125,8 @@ public class UserController {
         log.info("Finding users with criteria - birthDate: {}, phone: {}, lastName: {}, email: {}", birthDate, phone, lastName, email);
         Page<UserDto> users = userService.getAllUsers(login, birthDate, phone, lastName, email, pageable);
         return ResponseEntity.ok(users);
-        // http://localhost:8080/users/find?email=mail@mail.com&page=0&size=10&sort=email,asc
-        // http://localhost:8080/users/find?lastName=Ivanov&page=0&size=10&sort=lastName,asc
     }
 }
+// http://localhost:8080/users/date?birthDate=1990-01-01
+// http://localhost:8080/users/find?email=mail@mail.com&page=0&size=10&sort=email,asc
+// http://localhost:8080/users/find?lastName=bob&page=0&size=10&sort=lastName,asc

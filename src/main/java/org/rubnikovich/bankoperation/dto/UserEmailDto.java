@@ -12,7 +12,6 @@ public class UserEmailDto {
 
     private Long id;
 
-    @NotEmpty(message = "Email cannot be empty")
     @Email(message = "Invalid email format")
     private String email;
 
@@ -20,6 +19,5 @@ public class UserEmailDto {
     @Email(message = "Invalid new email format")
     private String newEmail;
 
-    @NotNull(message = "User ID cannot be null")
     private Long userId;
 }
