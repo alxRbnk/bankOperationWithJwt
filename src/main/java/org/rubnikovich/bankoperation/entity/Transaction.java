@@ -1,8 +1,7 @@
 package org.rubnikovich.bankoperation.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
@@ -10,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 @Entity
 @Table(name = "transaction")
 public class Transaction {
@@ -33,5 +33,4 @@ public class Transaction {
     @Column(name = "date", nullable = false)
     @CreationTimestamp
     private LocalDateTime date;
-
 }

@@ -1,7 +1,7 @@
 package org.rubnikovich.bankoperation.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,15 +10,14 @@ import lombok.Setter;
 @Setter
 public class UserPhoneNumberDto {
 
+    @Schema(hidden = true)
     private Long id;
 
+    @Schema(description = "phone", example = "+123456789")
     @NotEmpty(message = "Phone cannot be empty")
     @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Invalid phone number format")
     private String phone;
 
-    @NotEmpty(message = "New phone cannot be empty")
-    @Pattern(regexp = "^\\+?[0-9. ()-]{7,25}$", message = "Invalid new phone number format")
-    private String newPhone;
-
+    @Schema(hidden = true)
     private Long userId;
 }

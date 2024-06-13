@@ -3,6 +3,7 @@ package org.rubnikovich.bankoperation.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.rubnikovich.bankoperation.dto.TransactionDto;
 import org.rubnikovich.bankoperation.service.TransactionService;
@@ -16,13 +17,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/transactions")
 @Slf4j
+@RequiredArgsConstructor
 public class TransactionController {
 
     private final TransactionService transactionService;
-
-    public TransactionController(TransactionService transactionService) {
-        this.transactionService = transactionService;
-    }
 
     @Operation(summary = "Make a transaction")
     @ApiResponses(value = {
@@ -30,29 +28,28 @@ public class TransactionController {
             @ApiResponse(responseCode = "400", description = "Bad request")
     })
     @PostMapping
-    public ResponseEntity makeTransaction(@RequestHeader("Authorization") String token,
+    public ResponseEntity<String> makeTransaction(@RequestHeader("Authorization") String token,
                                           @RequestBody TransactionDto transactionDto) {
-        if (transactionService.makeTransaction(transactionDto, token)) {
-            log.info("Transaction made successfully");
-            return new ResponseEntity("the money has been sent", HttpStatus.OK);
-        }
-        log.warn("Failed to make transaction");
-        return new ResponseEntity("Failed to make transaction", HttpStatus.BAD_REQUEST);
+        return transactionService.makeTransaction(transactionDto, token);
     }
 
     @Operation(summary = "Get all transactions of the authenticated user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Transactions retrieved successfully"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized")
+            @ApiResponse(responseCode = "404", description = "Not found")
     })
     @GetMapping("/user")
-    public List<TransactionDto> getAllUserTransactions(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<List<TransactionDto>> getAllUserTransactions(@RequestHeader("Authorization") String token) {
         return transactionService.getAllUserTransactions(token);
     }
 
-    @GetMapping
     @Operation(summary = "Get all transactions")
-    public Collection getAllTransactions() {
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Transactions retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "Not found")
+    })
+    @GetMapping
+    public ResponseEntity<List<TransactionDto>> getAllTransactions() {
         return transactionService.getAllTransactions();
     }
 

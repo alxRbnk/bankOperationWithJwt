@@ -2,6 +2,7 @@ package org.rubnikovich.bankoperation.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.rubnikovich.bankoperation.entity.UserEmail;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@Builder
 public class UserDto {
 
     @NotEmpty(message = "Login cannot be empty")

@@ -5,35 +5,35 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.rubnikovich.bankoperation.security.JwtUtil;
 import org.rubnikovich.bankoperation.service.DetailsService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static org.rubnikovich.bankoperation.config.ApiConstant.*;
+
 @Component
+@RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final DetailsService usersDetailsService;
 
-    public JwtFilter(JwtUtil jwtUtil, DetailsService usersDetailsService) {
-        this.jwtUtil = jwtUtil;
-        this.usersDetailsService = usersDetailsService;
-    }
-
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, FilterChain filterChain) throws IOException, ServletException {
-        String authHeader = httpServletRequest.getHeader("Authorization");
-        if (authHeader != null && !authHeader.isBlank() && authHeader.startsWith("Bearer ")) {
+        String authHeader = httpServletRequest.getHeader(AUTHORIZATION);
+        if (authHeader != null && !authHeader.isBlank() && authHeader.startsWith(BEARER)) {
             String jwt = authHeader.substring(7);
             if (jwt.isBlank()) {
                 httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                httpServletResponse.getWriter().write("Invalid JWT Token in Bearer Header");
+                httpServletResponse.getWriter().write(INVALID_JWT_TOKEN);
                 return;
             } else {
                 try {
@@ -46,9 +46,9 @@ public class JwtFilter extends OncePerRequestFilter {
                     if (SecurityContextHolder.getContext().getAuthentication() == null) {
                         SecurityContextHolder.getContext().setAuthentication(authToken);
                     }
-                } catch (JWTVerificationException exc) {
+                } catch (JWTVerificationException | UsernameNotFoundException e) {
                     httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    httpServletResponse.getWriter().write("Invalid JWT Token");
+                    httpServletResponse.getWriter().write(INVALID_JWT_TOKEN);
                     return;
                 }
             }

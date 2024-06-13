@@ -1,6 +1,5 @@
 package org.rubnikovich.bankoperation.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.rubnikovich.bankoperation.dto.TransactionDto;
@@ -9,13 +8,15 @@ import org.rubnikovich.bankoperation.entity.User;
 import org.rubnikovich.bankoperation.repository.TransactionRepository;
 import org.rubnikovich.bankoperation.repository.UserRepository;
 import org.rubnikovich.bankoperation.security.JwtUtil;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+
+import static org.rubnikovich.bankoperation.config.ApiConstant.*;
 
 @Service
 @Slf4j
@@ -26,47 +27,51 @@ public class TransactionService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
 
-    public Transaction getById(Long id) {
-        return transactionRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-    }
-
-    public Collection<TransactionDto> getAllTransactions() {
+    public ResponseEntity<List<TransactionDto>> getAllTransactions() {
         List<Transaction> transactions = transactionRepository.findAll();
-        List<TransactionDto> transactionsDto = new ArrayList<>();
-        for (Transaction transaction : transactions) {
-            transactionsDto.add(toTransactionDto(transaction));
-        }
-        return transactionsDto;
+        List<TransactionDto> transactionsDto = transactions.stream()
+                .map(this::toTransactionDto)
+                .collect(Collectors.toList());
+        return transactions.isEmpty() ?
+                ResponseEntity.notFound().build() : ResponseEntity.ok().body(transactionsDto);
     }
 
-    public List<TransactionDto> getAllUserTransactions(String token) {
-        token = token.substring(7);
-        String login = jwtUtil.validateTokenAndGetClaim(token);
+    public ResponseEntity<List<TransactionDto>> getAllUserTransactions(String token) {
+        String login = jwtUtil.getLogin(token);
         User user = userRepository.findByLogin(login).orElseThrow();
         Long id = user.getId();
         List<Transaction> transactions = transactionRepository.getAllByRecipientIdOrSenderId(id, id);
-        List<TransactionDto> transactionsDto = new ArrayList<>();
-        for (Transaction transaction : transactions) {
-            transactionsDto.add(toTransactionDto(transaction));
-        }
-        return transactionsDto;
+        List<TransactionDto> transactionsDto = transactions.stream()
+                .map(this::toTransactionDto)
+                .collect(Collectors.toList());
+        return transactions.isEmpty() ?
+                ResponseEntity.notFound().build() : ResponseEntity.ok().body(transactionsDto);
     }
 
-    public boolean makeTransaction(TransactionDto transactionDto, String token) {
-        token = token.substring(7);
-        String login = jwtUtil.validateTokenAndGetClaim(token);
-        User sender = userRepository.findByLogin(login)
-                .orElseThrow(() -> new NoSuchElementException("Recipient not found"));
-        transactionDto.setSender(sender.getId());
-        User recipient = userRepository.findById(transactionDto.getRecipient())
-                .orElseThrow(() -> new NoSuchElementException("Recipient not found"));
+    public ResponseEntity<String> makeTransaction(TransactionDto transactionDto, String token) {
+        String login = jwtUtil.getLogin(token);
+        User sender;
+        User recipient;
+        try {
+            sender = userRepository.findByLogin(login)
+                    .orElseThrow(() -> new NoSuchElementException(USER_NOT_FOUND));
+            transactionDto.setSender(sender.getId());
+            recipient = userRepository.findById(transactionDto.getRecipientId())
+                    .orElseThrow(() -> new NoSuchElementException(USER_NOT_FOUND));
+        } catch (NoSuchElementException e) {
+            log.warn(USER_NOT_FOUND);
+            return ResponseEntity.badRequest()
+                    .body(TRANSACTION_FAILED + USER_NOT_FOUND);
+        }
         BigDecimal senderMoney = sender.getBalance();
         BigDecimal recipientMoney = recipient.getBalance();
         BigDecimal amount = transactionDto.getAmount();
         BigDecimal result = senderMoney.subtract(amount);
         if (result.compareTo(BigDecimal.ZERO) < 0 ||
                 amount.compareTo(BigDecimal.ZERO) < 0) {
-            return false;
+            log.warn(TRANSACTION_FAILED_BALANCE);
+            return ResponseEntity.badRequest()
+                    .body(TRANSACTION_FAILED_BALANCE);
         }
         sender.setBalance(senderMoney.subtract(amount));
         recipient.setBalance(recipientMoney.add(amount));
@@ -74,7 +79,8 @@ public class TransactionService {
         transactionRepository.save(transaction);
         userRepository.save(recipient);
         userRepository.save(sender);
-        return true;
+        log.info(TRANSACTION_SUCCESSFULLY);
+        return ResponseEntity.ok().body(TRANSACTION_SUCCESSFULLY);
     }
 
     private TransactionDto toTransactionDto(Transaction transaction) {
@@ -82,8 +88,8 @@ public class TransactionService {
         transactionDto.setAmount(transaction.getAmount());
         transactionDto.setDate(transaction.getDate());
         transactionDto.setId(transaction.getId());
-        transactionDto.setSender(transaction.getSender().getId()); //or other info
-        transactionDto.setRecipient(transaction.getRecipient().getId());
+        transactionDto.setSender(transaction.getSender().getId());
+        transactionDto.setRecipientId(transaction.getRecipient().getId());
         return transactionDto;
     }
 
@@ -92,7 +98,7 @@ public class TransactionService {
         transaction.setAmount(transactionDto.getAmount());
         transaction.setDate(transactionDto.getDate());
         transaction.setSender(userRepository.findById(transactionDto.getSender()).orElseThrow());
-        transaction.setRecipient(userRepository.findById(transactionDto.getRecipient()).orElseThrow());
+        transaction.setRecipient(userRepository.findById(transactionDto.getRecipientId()).orElseThrow());
         return transaction;
     }
 }

@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.rubnikovich.bankoperation.dto.EmailUpdateDto;
 import org.rubnikovich.bankoperation.dto.UserEmailDto;
 import org.rubnikovich.bankoperation.service.EmailService;
 import org.springframework.http.ResponseEntity;
@@ -52,9 +53,9 @@ public class EmailController {
     })
     @PutMapping()
     public ResponseEntity<String> update(@RequestHeader("Authorization") String token,
-                                         @RequestBody @Valid UserEmailDto emailDto,
+                                         @RequestBody @Valid EmailUpdateDto updateDto,
                                          BindingResult bindingResult) {
-        return emailService.emailUpdate(token, emailDto, bindingResult);
+        return emailService.emailUpdate(token, updateDto, bindingResult);
     }
 
     @Operation(summary = "Delete an email for the authenticated user")

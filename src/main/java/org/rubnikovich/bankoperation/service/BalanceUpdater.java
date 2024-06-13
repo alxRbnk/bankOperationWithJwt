@@ -1,5 +1,6 @@
 package org.rubnikovich.bankoperation.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.rubnikovich.bankoperation.entity.User;
 import org.rubnikovich.bankoperation.repository.UserRepository;
@@ -11,15 +12,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-//@Component //fixme
+@Component
 @Slf4j
+@RequiredArgsConstructor
 public class BalanceUpdater {
 
     private final UserRepository userRepository;
-
-    public BalanceUpdater(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     @Scheduled(fixedRate = 60000)
     @Transactional

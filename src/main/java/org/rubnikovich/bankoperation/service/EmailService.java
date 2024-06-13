@@ -2,6 +2,7 @@ package org.rubnikovich.bankoperation.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.rubnikovich.bankoperation.dto.EmailUpdateDto;
 import org.rubnikovich.bankoperation.dto.UserEmailDto;
 import org.rubnikovich.bankoperation.entity.User;
 import org.rubnikovich.bankoperation.entity.UserEmail;
@@ -15,9 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.rubnikovich.bankoperation.config.ApiConstant.*;
 
 @Service
 @Slf4j
@@ -26,23 +28,21 @@ public class EmailService {
 
     private final EmailRepository emailRepository;
     private final UserRepository userRepository;
-    private final JwtUtil jwtUtil;
     private final UserService userService;
+    private final JwtUtil jwtUtil;
 
     public boolean emailExists(String email) {
         return emailRepository.existsByEmail(email);
     }
 
     public ResponseEntity<List<String>> getAllUserEmails(String token) {
-        token = token.substring(7);
-        String login = jwtUtil.validateTokenAndGetClaim(token);
+        String login = jwtUtil.getLogin(token);
         Long userId = userService.getUserIdByLogin(login);
         List<UserEmail> emails = emailRepository.findAllByUserId(userId);
-        List<String> emailStrings = new ArrayList<>();
-        for (UserEmail userEmail : emails) {
-            emailStrings.add(userEmail.getEmail());
-        }
-        log.info("Retrieved {} emails for user with login: {}", emails.size(), login);
+        List<String> emailStrings = emails.stream()
+                .map(UserEmail::getEmail)
+                .collect(Collectors.toList());
+        log.info(EMAILS + emails.size());
         return ResponseEntity.ok(emailStrings);
     }
 
@@ -51,71 +51,70 @@ public class EmailService {
             String errors = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.joining(". "));
-            log.warn("Failed to add email " + errors);
-            return ResponseEntity.badRequest().body("Failed to add email, " + errors);
+            log.warn(FAILED_ADD_EMAIL + errors);
+            return ResponseEntity.badRequest().body(FAILED_ADD_EMAIL + errors);
         }
-        token = token.substring(7);
-        String login = jwtUtil.validateTokenAndGetClaim(token);
+        String login = jwtUtil.getLogin(token);
         User user = userService.getByLogin(login);
-        if (emailRepository.existsByEmail(emailDto.getNewEmail())) {
-            log.warn("Failed to add email {} for user with login: {}", emailDto.getNewEmail(), login);
-            return ResponseEntity.badRequest().body("Failed to add email, this email already exists");
+        if (emailRepository.existsByEmail(emailDto.getEmail())) {
+            log.warn(FAILED_ADD_EMAIL + emailDto.getEmail());
+            return ResponseEntity.badRequest().body(FAILED_ADD_EMAIL + ALREADY_EXISTS);
         }
         UserEmail email = new UserEmail();
         email.setUser(user);
-        email.setEmail(emailDto.getNewEmail());
+        email.setEmail(emailDto.getEmail());
         emailRepository.save(email);
-        log.info("Email {} added for user with login: {}", emailDto.getNewEmail(), login);
-        return ResponseEntity.ok().body("Email added");
+        log.info(EMAIL_ADDED + emailDto.getEmail());
+        return ResponseEntity.ok().body(EMAIL_ADDED);
     }
 
-    public ResponseEntity<String> emailUpdate(String token, UserEmailDto emailDto, BindingResult bindingResult) {
+    public ResponseEntity<String> emailUpdate(String token, EmailUpdateDto updateDto,
+                                              BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String errors = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.joining(". "));
-            log.warn("Failed to update email " + errors);
-            return ResponseEntity.badRequest().body("Failed to update email, " + errors);
+            log.warn(FAILED_UPDATED_EMAIL + errors);
+            return ResponseEntity.badRequest().body(FAILED_UPDATED_EMAIL + errors);
         }
-        token = token.substring(7);
-        String login = jwtUtil.validateTokenAndGetClaim(token);
+        String login = jwtUtil.getLogin(token);
         Long userId = userService.getUserIdByLogin(login);
-        emailDto.setUserId(userId);
-        if (!emailRepository.existsByEmail(emailDto.getEmail()) ||
-                emailRepository.existsByEmail(emailDto.getNewEmail())) {
-            log.info("Failed to update email");
-            return ResponseEntity.badRequest().body("Failed to update email");
+        updateDto.setUserId(userId);
+        if (!emailRepository.existsByEmail(updateDto.getCurrentEmail().getEmail()) ||
+                emailRepository.existsByEmail(updateDto.getNewEmail().getEmail())) {
+            log.info(FAILED_UPDATED_EMAIL);
+            return ResponseEntity.badRequest().body(FAILED_UPDATED_EMAIL);
         }
-        UserEmail currentEmail = emailRepository.findByEmail(emailDto.getEmail());
-        UserEmail email = convertToUserEmail(emailDto);
+        UserEmail currentEmail = emailRepository.findByEmail(updateDto.getCurrentEmail().getEmail());
+        UserEmail email = convertToUserEmail(updateDto);
         email.setId(currentEmail.getId());
         emailRepository.save(email);
-        log.info("Email updated from {} to {} for user with login: {}", emailDto.getEmail(), emailDto.getNewEmail(), login);
-        return ResponseEntity.ok().body("Email updated");
+        log.info(EMAIL_UPDATED + updateDto.getCurrentEmail().getEmail(),
+                updateDto.getNewEmail().getEmail(), login);
+        return ResponseEntity.ok().body(EMAIL_UPDATED);
     }
 
     @Transactional
     public ResponseEntity<String> emailDelete(String token, UserEmailDto emailDto) {
-        token = token.substring(7);
-        String login = jwtUtil.validateTokenAndGetClaim(token);
+        String login = jwtUtil.getLogin(token);
         Long userId = userService.getUserIdByLogin(login);
         String emailStr = emailDto.getEmail();
         List<UserEmail> emails = emailRepository.findAllByUserId(userId);
         List<String> emailStrings = emails.stream().map(UserEmail::getEmail).toList();
         if (emailStrings.contains(emailStr)) {
             emailRepository.deleteByEmail(emailStr);
-            log.info("Email {} deleted for user with login: {}", emailStr, login);
-            return ResponseEntity.ok().body("deleted " + emailStr);
+            log.info(DELETED + emailStr);
+            return ResponseEntity.ok().body(DELETED + emailStr);
         }
-        log.warn("Failed to delete email {} for user with login: {}", emailStr, login);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not found " + emailStr);
+        log.warn(FAILED_DELETE_EMAIL + emailStr, login);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(NOT_FOUND + emailStr);
     }
 
-    private UserEmail convertToUserEmail(UserEmailDto emailDto) {
+    private UserEmail convertToUserEmail(EmailUpdateDto updateDto) {
         UserEmail email = new UserEmail();
-        User user = userRepository.findById(emailDto.getUserId()).orElseThrow();
+        User user = userRepository.findById(updateDto.getUserId()).orElseThrow();
         email.setUser(user);
-        email.setEmail(emailDto.getNewEmail());
+        email.setEmail(updateDto.getNewEmail().getEmail());
         email.setId(email.getId());
         return email;
     }

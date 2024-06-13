@@ -20,6 +20,8 @@ import org.springframework.validation.FieldError;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.rubnikovich.bankoperation.config.ApiConstant.*;
+
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -38,16 +40,15 @@ public class AuthService {
             String errors = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.joining(". "));
-            log.warn("Registration failed: Validation errors found. " + errors);
+            log.warn(REGISTRATION_FAILED + errors);
             return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Registration failed: " + errors));
+                    .body(Map.of(MESSAGE, REGISTRATION_FAILED + errors));
         }
-
         user.setBalance(user.getInitialDeposit());
         userService.create(user);
         String token = jwtUtil.generateToken(user.getLogin());
-        log.info("User registered successfully: {}", user.getLogin());
-        return ResponseEntity.ok().body(Map.of("jwt token", token));
+        log.info(REGISTRATION_COMPLETED + user.getLogin());
+        return ResponseEntity.ok().body(Map.of(JWT_TOKEN, token));
     }
 
     public ResponseEntity<Map<String, String>> loginUser(AuthenticationDto authenticationDto,
@@ -56,9 +57,9 @@ public class AuthService {
             String errors = bindingResult.getFieldErrors().stream()
                     .map(FieldError::getDefaultMessage)
                     .collect(Collectors.joining(". "));
-            log.warn("Registration failed: Validation errors found. " + errors);
+            log.warn(REGISTRATION_FAILED + errors);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Registration failed: " + errors));
+                    .body(Map.of(MESSAGE, REGISTRATION_FAILED + errors));
         }
         UsernamePasswordAuthenticationToken authInputToken =
                 new UsernamePasswordAuthenticationToken(authenticationDto.getLogin(),
@@ -66,13 +67,13 @@ public class AuthService {
         try {
             authenticationManager.authenticate(authInputToken);
         } catch (BadCredentialsException e) {
-            log.warn("Login failed: Incorrect credentials for user: {}", authenticationDto.getLogin());
+            log.warn(LOGIN_FAILED + authenticationDto.getLogin());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("message", "Incorrect login or password"));
+                    .body(Map.of(MESSAGE, INCORRECT));
         }
         String token = jwtUtil.generateToken(authenticationDto.getLogin());
-        log.info("User logged in successfully: {}", authenticationDto.getLogin());
-        return ResponseEntity.ok().body(Map.of("jwt token", token));
+        log.info(LOGIN_COMPLETED + authenticationDto.getLogin());
+        return ResponseEntity.ok().body(Map.of(JWT_TOKEN, token));
     }
 
     private User convertToUser(UserDto userDto) {

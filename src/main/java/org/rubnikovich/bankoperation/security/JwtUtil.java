@@ -37,4 +37,9 @@ public class JwtUtil {
         return jwt.getClaim("login").asString();
     }
 
+    public String getLogin(String token){
+        token = token.substring(7);
+        return validateTokenAndGetClaim(token);
+    }
+
 }
