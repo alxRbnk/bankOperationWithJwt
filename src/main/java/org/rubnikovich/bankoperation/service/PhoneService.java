@@ -9,7 +9,6 @@ import org.rubnikovich.bankoperation.entity.UserPhoneNumber;
 import org.rubnikovich.bankoperation.repository.PhoneRepository;
 import org.rubnikovich.bankoperation.repository.UserRepository;
 import org.rubnikovich.bankoperation.security.JwtUtil;
-import org.rubnikovich.bankoperation.validator.CustomValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
