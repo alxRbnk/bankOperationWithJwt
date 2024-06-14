@@ -1,5 +1,6 @@
 package org.rubnikovich.bankoperation.validator;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.rubnikovich.bankoperation.entity.User;
 import org.rubnikovich.bankoperation.entity.UserEmail;
@@ -14,16 +15,11 @@ import org.springframework.validation.Validator;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class CustomValidator implements Validator {
     private final DetailsService detailsService;
     private final PhoneService phoneService;
     private final EmailService emailService;
-
-    public CustomValidator(DetailsService detailsService, PhoneService phoneService, EmailService emailService) {
-        this.detailsService = detailsService;
-        this.phoneService = phoneService;
-        this.emailService = emailService;
-    }
 
     @Override
     public boolean supports(Class<?> aClass) {
