@@ -8,10 +8,15 @@ import org.rubnikovich.bankoperation.entity.UserPhoneNumber;
 import org.rubnikovich.bankoperation.service.EmailService;
 import org.rubnikovich.bankoperation.service.PhoneService;
 import org.rubnikovich.bankoperation.service.DetailsService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.Validator;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -54,4 +59,5 @@ public class CustomValidator implements Validator {
             }
         }
     }
+
 }

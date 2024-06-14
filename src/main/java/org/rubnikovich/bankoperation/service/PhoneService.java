@@ -9,6 +9,7 @@ import org.rubnikovich.bankoperation.entity.UserPhoneNumber;
 import org.rubnikovich.bankoperation.repository.PhoneRepository;
 import org.rubnikovich.bankoperation.repository.UserRepository;
 import org.rubnikovich.bankoperation.security.JwtUtil;
+import org.rubnikovich.bankoperation.validator.CustomValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -47,12 +48,9 @@ public class PhoneService {
     }
 
     public ResponseEntity<String> phoneAdd(String token, UserPhoneNumberDto phoneDto, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            String errors = bindingResult.getFieldErrors().stream()
-                    .map(FieldError::getDefaultMessage)
-                    .collect(Collectors.joining(". "));
-            log.warn(FAILED_ADD_PHONE + errors);
-            return ResponseEntity.badRequest().body(FAILED_ADD_PHONE + errors);
+        ResponseEntity<String> errorResponse = handleBindingErrors(bindingResult, FAILED_ADD_PHONE);
+        if (errorResponse != null) {
+            return errorResponse;
         }
         String login = jwtUtil.getLogin(token);
         User user = userService.getByLogin(login);
@@ -70,12 +68,9 @@ public class PhoneService {
 
     public ResponseEntity<String> phoneUpdate(String token, PhoneUpdateDto updateDto,
                                               BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            String errors = bindingResult.getFieldErrors().stream()
-                    .map(FieldError::getDefaultMessage)
-                    .collect(Collectors.joining(". "));
-            log.warn(FAILED_UPDATED_PHONE + errors);
-            return ResponseEntity.badRequest().body(FAILED_UPDATED_PHONE + errors);
+        ResponseEntity<String> errorResponse = handleBindingErrors(bindingResult, FAILED_UPDATED_PHONE);
+        if (errorResponse != null) {
+            return errorResponse;
         }
         String login = jwtUtil.getLogin(token);
         Long userId = userService.getUserIdByLogin(login);
@@ -117,5 +112,16 @@ public class PhoneService {
         phone.setPhone(updateDto.getNewPhone().getPhone());
         phone.setId(phone.getId());
         return phone;
+    }
+
+    private ResponseEntity<String> handleBindingErrors(BindingResult bindingResult, String message) {
+        if (bindingResult.hasErrors()) {
+            String errors = bindingResult.getFieldErrors().stream()
+                    .map(FieldError::getDefaultMessage)
+                    .collect(Collectors.joining(". "));
+            log.warn(message + errors);
+            return ResponseEntity.badRequest().body(message + errors);
+        }
+        return null;
     }
 }
